@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0"><i class="bi bi-person-plus"></i> Создать аккаунт</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Ошибка!</strong> Пожалуйста, исправьте следующие ошибки:
+                        <ul class="my-1">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Email</label>
+                        <input type="email" name="email" id="id_email" class="form-control form-control-lg" 
+                               value="{{ form.email.value|default:'' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Имя пользователя</label>
+                        <input type="text" name="username" id="id_username" class="form-control form-control-lg" 
+                               value="{{ form.username.value|default:'' }}" required>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_first_name" class="form-label">Имя</label>
+                            <input type="text" name="first_name" id="id_first_name" class="form-control" 
+                                   value="{{ form.first_name.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_last_name" class="form-label">Фамилия</label>
+                            <input type="text" name="last_name" id="id_last_name" class="form-control" 
+                                   value="{{ form.last_name.value|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="id_password1" class="form-label">Пароль</label>
+                            <input type="password" name="password1" id="id_password1" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_password2" class="form-label">Подтверждение</label>
+                            <input type="password" name="password2" id="id_password2" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-check"></i> Зарегистрироваться
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

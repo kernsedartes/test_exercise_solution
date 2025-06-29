@@ -51,14 +51,51 @@ class PostSerializer(serializers.ModelSerializer):
             post = Post.objects.create()
             return post
 
+    def validate(self, data):
+        quote = data.get("quote")
+        if quote:
+            if self.instance:
+                if (
+                    Post.objects.exclude(pk=self.instance.pk)
+                    .filter(quote__iexact=quote)
+                    .exists()
+                ):
+                    raise serializers.ValidationError(
+                        "Такая цитата уже существует"
+                    )
+            else:
+                if Post.objects.filter(quote__iexact=quote).exists():
+                    raise serializers.ValidationError(
+                        "Такая цитата уже существует"
+                    )
+
+        source = data.get(
+            "source", self.instance.source if self.instance else None
+        )
+        if source:
+            post_count = source.post_set.exclude(
+                pk=self.instance.pk if self.instance else None
+            ).count()
+
+            if post_count >= 3:
+                raise serializers.ValidationError(
+                    f"Источник '{source.name}' уже имеет максимальное количество цитат (3)"
+                )
+
+        return data
+
 
 class SourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Source
-        fields = (
-            "id",
-            "name",
-        )
+        fields = "__all__"
+
+    def validate_name(self, value):
+        if Source.objects.filter(name__iexact=value).exists():
+            raise serializers.ValidationError(
+                "Источник с таким именем уже существует"
+            )
+        return value
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -74,3 +111,21 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
         )
         extra_kwargs = {"password": {"write_only": True}}
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("email", "username", "first_name", "last_name", "password")
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def validate(self, data):
+        if "password" not in data:
+            raise serializers.ValidationError(
+                {"password": "This field is required."}
+            )
+        return data
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user

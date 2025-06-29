@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Добавить новую цитату</h2>
+    
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    
+    <form method="post" action="{% url 'posts-add_quote' %}">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="quote" class="form-label">Текст цитаты</label>
+            <textarea class="form-control" id="quote" name="quote" required rows="3"></textarea>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="source" class="form-label">Источник</label>
+                <select class="form-select" id="source" name="source">
+                    {% for source in sources %}
+                        <option value="{{ source.id }}">{{ source.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="weight" class="form-label">Вес (1-10)</label>
+                <input type="number" class="form-control" id="weight" name="weight" min="1" max="10" value="5" required>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="new_source_check">
+                <label class="form-check-label" for="new_source_check">
+                    Добавить новый источник
+                </label>
+            </div>
+            <input type="text" class="form-control mt-2" id="new_source" name="new_source" style="display: none;">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Добавить</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('new_source_check').addEventListener('change', function() {
+    const newSourceField = document.getElementById('new_source');
+    const sourceSelect = document.getElementById('source');
+    
+    if (this.checked) {
+        newSourceField.style.display = 'block';
+        newSourceField.required = true;
+        sourceSelect.disabled = true;
+    } else {
+        newSourceField.style.display = 'none';
+        newSourceField.required = false;
+        sourceSelect.disabled = false;
+    }
+});
+</script>
+{% endblock %}

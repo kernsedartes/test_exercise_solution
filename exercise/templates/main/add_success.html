@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Цитата успешно добавлена!</h4>
+        <p>"{{ quote.quote }}"</p>
+        <hr>
+        <p class="mb-0">
+            <a href="{% url 'posts-add_quote' %}" class="btn btn-primary">Добавить еще</a>
+            <a href="{% url 'random_quote' %}" class="btn btn-outline-secondary">На главную</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
