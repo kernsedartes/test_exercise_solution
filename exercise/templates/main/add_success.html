@@ -7,8 +7,8 @@
         <p>"{{ quote.quote }}"</p>
         <hr>
         <p class="mb-0">
-            <a href="{% url 'posts-add_quote' %}" class="btn btn-primary">Добавить еще</a>
-            <a href="{% url 'random_quote' %}" class="btn btn-outline-secondary">На главную</a>
+            <a href="{% url 'main:add_quote' %}" class="btn btn-primary">Добавить еще</a>
+            <a href="{% url 'main:random_quote' %}" class="btn btn-outline-secondary">На главную</a>
         </p>
     </div>
 </div>

@@ -43,12 +43,16 @@ urlpatterns = [
         name="password_change_done",
     ),
     # ============ Djoser API ============
-    path("api/auth/", include("djoser.urls.jwt")),  # Только если используете JWT
+    path(
+        "api/auth/", include("djoser.urls.jwt")
+    ),  # Только если используете JWT
     path("api/auth/register/", include("djoser.urls.base")),
     # ============ Основные вьюхи ============
     path("", RandomQuoteView.as_view(), name="random_quote"),
     path("top/", TopQuotesView.as_view(), name="top_quotes"),
-    path("vote/<int:pk>/<str:action>/", LikeDislikeView.as_view(), name="vote"),
+    path(
+        "vote/<int:pk>/<str:action>/", LikeDislikeView.as_view(), name="vote"
+    ),
     path(
         "add-quote/",
         PostViewSet.as_view({"get": "add_quote_form", "post": "add_quote"}),

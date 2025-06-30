@@ -37,7 +37,9 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         related_name="post_set",
     )
-    liked_by = models.ManyToManyField(User, related_name="liked_posts", blank=True)
+    liked_by = models.ManyToManyField(
+        User, related_name="liked_posts", blank=True
+    )
     added_by = models.ForeignKey(
         User,
         verbose_name="Добавил",
@@ -60,8 +62,13 @@ class Post(models.Model):
 
     def clean(self):
         if self.source_id and self.source.post_set.count() >= 3:
-            if not self.pk or self.source.post_set.filter(pk=self.pk).count() == 0:
-                raise ValidationError("У источника не может быть больше 3 цитат")
+            if (
+                not self.pk
+                or self.source.post_set.filter(pk=self.pk).count() == 0
+            ):
+                raise ValidationError(
+                    "У источника не может быть больше 3 цитат"
+                )
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -69,10 +76,24 @@ class Post(models.Model):
 
     @property
     def rating(self):
-        """Рассчитывает рейтинг цитаты (лайки минус дизлайки)"""
         return self.likes - self.dislikes
 
     @property
     def popularity_score(self):
-        """Рассчитывает общий балл популярности"""
         return (self.likes * 2) - self.dislikes + (self.views // 10)
+
+
+class Vote(models.Model):
+    VOTE_TYPES = (
+        ("like", "Like"),
+        ("dislike", "Dislike"),
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name="votes"
+    )
+    vote_type = models.CharField(max_length=10, choices=VOTE_TYPES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "post")

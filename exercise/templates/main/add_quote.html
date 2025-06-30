@@ -1,31 +1,72 @@
 {% extends 'base.html' %}
 
+{% block title %}Добавить цитату{% endblock %}
+
 {% block content %}
-<div class="container">
-    {% if user.is_authenticated %}
-        <form method="post" id="quote-form">
-            {% csrf_token %}
-            
-            <div class="mb-3">
-                {{ form.quote.label_tag }}
-                {{ form.quote }}
-                {% if form.quote.errors %}
-                    <div class="text-danger">{{ form.quote.errors }}</div>
-                {% endif %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Добавить новую цитату</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        <div class="mb-3">
+                            {% for message in messages %}
+                                <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %}" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if form.errors or form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <strong>Ошибка:</strong> Пожалуйста, исправьте следующие ошибки:
+                            <ul>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'main:add_quote' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.quote.id_for_label }}" class="form-label">{{ form.quote.label }}</label>
+                            {{ form.quote }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.source.id_for_label }}" class="form-label">{{ form.source.label }} (выберите, если не добавляете новый источник)</label>
+                            {{ form.source }}
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="{{ form.add_new_source.id_for_label }}" name="add_new_source">
+                            <label class="form-check-label" for="{{ form.add_new_source.id_for_label }}">{{ form.add_new_source.label }}</label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.new_source.id_for_label }}" class="form-label">{{ form.new_source.label }} (заполните, если добавляете новый источник)</label>
+                            {{ form.new_source }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.weight.id_for_label }}" class="form-label">{{ form.weight.label }}</label>
+                            {{ form.weight }}
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Добавить</button>
+                            <a href="{% url 'main:random_quote' %}" class="btn btn-secondary">Отмена</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            
-            <div class="mb-3">
-                {{ form.source.label_tag }}
-                {{ form.source }}
-            </div>
-            
-            <button type="submit" class="btn btn-primary">Добавить</button>
-        </form>
-        
-    {% else %}
-        <div class="alert alert-warning">
-            Пожалуйста <a href="{% url 'main:login' %}">войдите</a> чтобы добавить цитату
         </div>
-    {% endif %}
+    </div>
 </div>
 {% endblock %}

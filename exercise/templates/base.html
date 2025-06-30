@@ -85,11 +85,9 @@
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form method="post" id="logout-form">
-                                        {% csrf_token %}
-                                        <input type="hidden" id="refresh-token" name="refresh" value="">
-                                        <button type="submit" class="btn btn-danger">Выйти</button>
-                                    </form>
+                                    <a class="dropdown-item" href="{% url 'main:logout' %}">
+                                        <i class="bi bi-key me-2"></i> Выйти
+                                    </a>
                                 </li>
                             </ul>
                         </div>
