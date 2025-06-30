@@ -7,9 +7,13 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import action
 from rest_framework.views import APIView
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from .pagination import CustomPagination
 from .models import Post, Source
 from users.models import User
+from .forms import AddQuoteForm
 from .serializers import (
     UserCreateSerializer,
     UserSerializer,
@@ -17,6 +21,7 @@ from .serializers import (
     PostSerializer,
 )
 import random
+from rest_framework.permissions import IsAuthenticated
 
 
 class CustomTokenLoginView(APIView):
@@ -66,53 +71,40 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(top_quotes, many=True)
         return Response(serializer.data)
 
-    @action(
-        detail=False,
-        methods=["get"],
-        url_path="add-quote",
-        url_name="add_quote",
-    )
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def add_quote_form(self, request):
-        """HTML форма для добавления цитаты"""
-        sources = Source.objects.all().order_by("name")
-        return render(request, "main/add_quote.html", {"sources": sources})
+        sources = Source.objects.all()
+        form = AddQuoteForm()
+        return render(
+            request,
+            "main/add_quote.html",
+            {
+                "sources": sources,
+                "form": form,
+                "user": request.user,  # Важно передать пользователя
+            },
+        )
 
-    @action(
-        detail=False,
-        methods=["post"],
-        url_path="add-quote",
-        url_name="add_quote_post",
-    )
+    # Для API (JWT/сессии)
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def add_quote(self, request):
-        """Обработка формы добавления цитаты"""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            # Проверка аутентификации
+            if not request.user.is_authenticated:
+                return Response(
+                    {"error": "Authentication required"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
 
-        # Проверка на дубликат
-        if Post.objects.filter(
-            quote__iexact=serializer.validated_data["quote"]
-        ).exists():
-            return Response(
-                {"error": "Такая цитата уже существует"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            # Обработка данных
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(added_by=request.user)
 
-        # Проверка ограничения на количество цитат у источника
-        source = serializer.validated_data.get("source")
-        if source and source.post_set.count() >= 3:
-            return Response(
-                {
-                    "error": f"У источника '{source.name}' уже максимальное количество цитат (3)"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_create(self, serializer):
-        """Автоматически устанавливаем пользователя, добавившего цитату"""
-        serializer.save(added_by=self.request.user)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SourceViewSet(viewsets.ModelViewSet):
@@ -147,34 +139,25 @@ class UserViewSet(viewsets.ModelViewSet):
             "username": user.username,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "password": user.pasword,
         }
         headers = self.get_success_headers(serializer.data)
-        return Response(
-            response_data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class RandomQuoteView(View):
-    """Отображает случайную цитату с учетом веса"""
 
     def get(self, request):
         posts = Post.objects.all().select_related("source")
 
         if not posts.exists():
-            return render(
-                request, "index.html", {"error": "Нет цитат в базе данных"}
-            )
+            return render(request, "index.html", {"error": "Нет цитат в базе данных"})
         weights = [post.weight for post in posts]
         random_post = random.choices(list(posts), weights=weights, k=1)[0]
-        Post.objects.filter(pk=random_post.pk).update(
-            views=models.F("views") + 1
-        )
+        Post.objects.filter(pk=random_post.pk).update(views=models.F("views") + 1)
         random_post.views += 1
         total_views = (
-            Post.objects.aggregate(total_views=models.Sum("views"))[
-                "total_views"
-            ]
-            or 0
+            Post.objects.aggregate(total_views=models.Sum("views"))["total_views"] or 0
         )
         return render(
             request,
@@ -184,17 +167,11 @@ class RandomQuoteView(View):
 
 
 class TopQuotesView(View):
-    """Отображает топ-10 цитат по лайкам"""
 
     def get(self, request):
-        top_quotes = Post.objects.order_by("-likes").select_related("source")[
-            :10
-        ]
+        top_quotes = Post.objects.order_by("-likes").select_related("source")[:10]
         total_views = (
-            Post.objects.aggregate(total_views=models.Sum("views"))[
-                "total_views"
-            ]
-            or 0
+            Post.objects.aggregate(total_views=models.Sum("views"))["total_views"] or 0
         )
 
         return render(
@@ -205,7 +182,6 @@ class TopQuotesView(View):
 
 
 class LikeDislikeView(View):
-    """Обрабатывает лайки и дизлайки"""
 
     def post(self, request, pk, action):
         post = get_object_or_404(Post, pk=pk)

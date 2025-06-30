@@ -11,9 +11,7 @@ class CustomTokenCreateSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        user = authenticate(
-            email=attrs.get("email"), password=attrs.get("password")
-        )
+        user = authenticate(email=attrs.get("email"), password=attrs.get("password"))
 
         if not user:
             raise serializers.ValidationError(
@@ -60,18 +58,12 @@ class PostSerializer(serializers.ModelSerializer):
                     .filter(quote__iexact=quote)
                     .exists()
                 ):
-                    raise serializers.ValidationError(
-                        "Такая цитата уже существует"
-                    )
+                    raise serializers.ValidationError("Такая цитата уже существует")
             else:
                 if Post.objects.filter(quote__iexact=quote).exists():
-                    raise serializers.ValidationError(
-                        "Такая цитата уже существует"
-                    )
+                    raise serializers.ValidationError("Такая цитата уже существует")
 
-        source = data.get(
-            "source", self.instance.source if self.instance else None
-        )
+        source = data.get("source", self.instance.source if self.instance else None)
         if source:
             post_count = source.post_set.exclude(
                 pk=self.instance.pk if self.instance else None
@@ -92,9 +84,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         if Source.objects.filter(name__iexact=value).exists():
-            raise serializers.ValidationError(
-                "Источник с таким именем уже существует"
-            )
+            raise serializers.ValidationError("Источник с таким именем уже существует")
         return value
 
 
@@ -114,18 +104,28 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+        min_length=8,  # Добавляем минимальную длину
+        error_messages={"min_length": "Password must be at least 8 characters long."},
+    )
+
     class Meta:
         model = User
         fields = ("email", "username", "first_name", "last_name", "password")
-        extra_kwargs = {"password": {"write_only": True}}
-
-    def validate(self, data):
-        if "password" not in data:
-            raise serializers.ValidationError(
-                {"password": "This field is required."}
-            )
-        return data
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
+        """Создаём пользователя с хешированным паролем"""
+        user = User.objects.create_user(
+            email=validated_data["email"],
+            username=validated_data["username"],
+            password=validated_data["password"],  # Пароль хешируется автоматически
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+        )
         return user

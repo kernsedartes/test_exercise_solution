@@ -1,43 +1,33 @@
-from django.urls import include, path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from django.contrib.auth import views as auth_views
+from users.views import (
+    RegisterView,
+    ProfileView,
+    CustomLoginView,
+    CustomLogoutView,
+)
 from .views import (
     PostViewSet,
-    CustomTokenLoginView,
     SourceViewSet,
     RandomQuoteView,
     TopQuotesView,
     LikeDislikeView,
 )
-from django.contrib.auth import views as auth_views
-from users.views import RegisterView, ProfileView
+
+app_name = "main"
 
 router = DefaultRouter()
 router.register(r"posts", PostViewSet, basename="posts")
 router.register(r"sources", SourceViewSet, basename="sources")
-router.register(
-    r"posts/add-quote",
-    PostViewSet.add_quote,
-    basename="posts_add",
-)
+
 urlpatterns = [
-    path("api/", include(router.urls)),
-    path("auth/token/login/", CustomTokenLoginView.as_view(), name="login"),
-    path("auth/", include("djoser.urls")),
-    path("auth/", include("djoser.urls.authtoken")),
-    # Аутентификация пользователей
+    # ============ Ваши кастомные вьюхи ============
     path("register/", RegisterView.as_view(), name="register"),
-    path(
-        "login/",
-        auth_views.LoginView.as_view(template_name="registration/login.html"),
-        name="login",
-    ),
-    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("login/", CustomLoginView.as_view(), name="login"),
+    path("logout/", CustomLogoutView.as_view(), name="logout"),
     path("profile/", ProfileView.as_view(), name="profile"),
-    path("", RandomQuoteView.as_view(), name="random_quote"),
-    path("top/", TopQuotesView.as_view(), name="top_quotes"),
-    path(
-        "vote/<int:pk>/<str:action>/", LikeDislikeView.as_view(), name="vote"
-    ),
+    # Смена пароля
     path(
         "password_change/",
         auth_views.PasswordChangeView.as_view(
@@ -52,4 +42,18 @@ urlpatterns = [
         ),
         name="password_change_done",
     ),
+    # ============ Djoser API ============
+    path("api/auth/", include("djoser.urls.jwt")),  # Только если используете JWT
+    path("api/auth/register/", include("djoser.urls.base")),
+    # ============ Основные вьюхи ============
+    path("", RandomQuoteView.as_view(), name="random_quote"),
+    path("top/", TopQuotesView.as_view(), name="top_quotes"),
+    path("vote/<int:pk>/<str:action>/", LikeDislikeView.as_view(), name="vote"),
+    path(
+        "add-quote/",
+        PostViewSet.as_view({"get": "add_quote_form", "post": "add_quote"}),
+        name="add_quote",
+    ),
+    # ============ API Endpoints ============
+    path("api/", include(router.urls)),
 ]

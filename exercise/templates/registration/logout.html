@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="card-title mb-0">Выход из системы</h3>
+                </div>
+                <div class="card-body text-center">
+                    <p class="lead">Вы уверены, что хотите выйти?</p>
+                    
+                    <form method="post" action="{% url 'main:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-sign-out-alt"></i> Выйти
+                        </button>
+                        <a href="{% url 'main:profile' %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-user"></i> Вернуться в профиль
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

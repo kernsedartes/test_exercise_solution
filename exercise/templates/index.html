@@ -24,13 +24,13 @@
                 
                 <div class="action-buttons mt-5">
                     <div class="d-flex justify-content-center gap-3">
-                        <form method="post" action="{% url 'vote' post.pk 'like' %}">
+                        <form method="post" action="{% url 'main:vote' post.pk 'like' %}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-success btn-lg py-3">
                                 <i class="bi bi-hand-thumbs-up"></i> 👍 {{ post.likes }}
                             </button>
                         </form>
-                        <form method="post" action="{% url 'vote' post.pk 'dislike' %}">
+                        <form method="post" action="{% url 'main:vote' post.pk 'dislike' %}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-danger btn-lg py-3">
                                 <i class="bi bi-hand-thumbs-down"></i> 👎 {{ post.dislikes }}
@@ -45,7 +45,7 @@
                     <span class="text-muted">
                         <i class="bi bi-eye"></i> Просмотров: {{ post.views }}
                     </span>
-                    <a href="{% url 'random_quote' %}" class="btn btn-outline-primary">
+                    <a href="{% url 'main:random_quote' %}" class="btn btn-outline-primary">
                         <i class="bi bi-arrow-repeat"></i> Другая цитата
                     </a>
                 </div>
@@ -65,10 +65,10 @@
         
         <div class="mt-4 text-center">
             <div class="d-flex justify-content-center gap-2">
-                <a href="{% url 'top_quotes' %}" class="btn btn-outline-success">
+                <a href="{% url 'main:top_quotes' %}" class="btn btn-outline-success">
                     <i class="bi bi-trophy"></i> Топ-10 цитат
                 </a>
-                <a href="{% url 'main/add_quote' %}" class="btn btn-outline-secondary">
+                <a href="{% url 'main:add_quote' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-plus-circle"></i> Добавить цитату
                 </a>
             </div>

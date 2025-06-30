@@ -42,13 +42,13 @@
                                 </span>
                             </div>
                             <div class="btn-group">
-                                <form method="post" action="{% url 'vote' quote.pk 'like' %}">
+                                <form method="post" action="{% url 'main:vote' quote.pk 'like' %}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline-success">
                                         👍
                                     </button>
                                 </form>
-                                <form method="post" action="{% url 'vote' quote.pk 'dislike' %}">
+                                <form method="post" action="{% url 'main:vote' quote.pk 'dislike' %}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
                                         👎
@@ -79,7 +79,7 @@
         {% endif %}
         
         <div class="mt-4 text-center">
-            <a href="{% url 'random_quote' %}" class="btn btn-outline-primary">
+            <a href="{% url 'main:random_quote' %}" class="btn btn-outline-primary">
                 <i class="bi bi-shuffle"></i> Случайная цитата
             </a>
         </div>

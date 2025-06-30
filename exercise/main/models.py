@@ -16,6 +16,9 @@ class Source(models.Model):
             models.UniqueConstraint(fields=["name"], name="unique_source"),
         ]
 
+    def __str__(self):
+        return self.name
+
 
 class Post(models.Model):
     quote = models.TextField("Цитата", unique=True)
@@ -34,9 +37,7 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         related_name="post_set",
     )
-    liked_by = models.ManyToManyField(
-        User, related_name="liked_posts", blank=True
-    )
+    liked_by = models.ManyToManyField(User, related_name="liked_posts", blank=True)
     added_by = models.ForeignKey(
         User,
         verbose_name="Добавил",
@@ -59,13 +60,8 @@ class Post(models.Model):
 
     def clean(self):
         if self.source_id and self.source.post_set.count() >= 3:
-            if (
-                not self.pk
-                or self.source.post_set.filter(pk=self.pk).count() == 0
-            ):
-                raise ValidationError(
-                    "У источника не может быть больше 3 цитат"
-                )
+            if not self.pk or self.source.post_set.filter(pk=self.pk).count() == 0:
+                raise ValidationError("У источника не может быть больше 3 цитат")
 
     def save(self, *args, **kwargs):
         self.full_clean()
